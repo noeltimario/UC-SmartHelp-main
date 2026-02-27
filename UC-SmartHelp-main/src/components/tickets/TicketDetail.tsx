@@ -1,0 +1,121 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { ArrowLeft, Send } from "lucide-react";
+
+interface Props {
+  ticket: any;
+  onBack: () => void;
+}
+
+const TicketDetail = ({ ticket, onBack }: Props) => {
+  const { user, roles } = useAuth();
+  const { toast } = useToast();
+  const [messages, setMessages] = useState<any[]>([]);
+  const [reply, setReply] = useState("");
+  const [status, setStatus] = useState(ticket.status);
+  const [loading, setLoading] = useState(false);
+  const isStaffOrAdmin = roles.includes("staff") || roles.includes("admin");
+
+  const fetchMessages = async () => {
+    const { data } = await supabase
+      .from("ticket_messages")
+      .select("*, profiles:sender_id(first_name, last_name)")
+      .eq("ticket_id", ticket.id)
+      .order("created_at", { ascending: true });
+    if (data) setMessages(data);
+  };
+
+  useEffect(() => {
+    fetchMessages();
+  }, [ticket.id]);
+
+  const handleSendReply = async () => {
+    if (!reply.trim() || !user) return;
+    setLoading(true);
+    await supabase.from("ticket_messages").insert({
+      ticket_id: ticket.id,
+      sender_id: user.id,
+      content: reply,
+    });
+    setReply("");
+    setLoading(false);
+    fetchMessages();
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    setStatus(newStatus);
+    await supabase.from("tickets").update({ status: newStatus as any }).eq("id", ticket.id);
+    toast({ title: "Status updated" });
+  };
+
+  return (
+    <div className="space-y-6">
+      <Button variant="outline" onClick={onBack}><ArrowLeft className="mr-2 h-4 w-4" /> Back</Button>
+
+      <div className="rounded-xl border bg-card p-6 space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-foreground">{ticket.subject}</h2>
+            <p className="text-sm text-muted-foreground">
+              Ticket {ticket.ticket_number} • {ticket.departments?.name} • {format(new Date(ticket.created_at), "MMM d, yyyy")}
+            </p>
+          </div>
+          {isStaffOrAdmin ? (
+            <Select value={status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in_progress">In-Progress</SelectItem>
+                <SelectItem value="resolved">Resolved/Closed</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : (
+            <Badge>{status === "in_progress" ? "In-Progress" : status === "resolved" ? "Resolved/Closed" : "Pending"}</Badge>
+          )}
+        </div>
+
+        {/* Original message */}
+        <div className="rounded-lg bg-secondary p-4">
+          <p className="text-sm font-medium text-foreground">
+            From: {ticket.profiles?.first_name} {ticket.profiles?.last_name}
+          </p>
+          <p className="mt-2 text-foreground whitespace-pre-wrap">{ticket.description}</p>
+        </div>
+
+        {/* Thread */}
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {messages.map((m) => (
+            <div key={m.id} className={`rounded-lg p-4 ${m.sender_id === ticket.sender_id ? "bg-secondary" : "bg-primary/10"}`}>
+              <p className="text-xs font-medium text-muted-foreground mb-1">
+                {m.profiles?.first_name} {m.profiles?.last_name} • {format(new Date(m.created_at), "MMM d, yyyy h:mm a")}
+              </p>
+              <p className="text-foreground whitespace-pre-wrap">{m.content}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Reply */}
+        <div className="flex gap-2">
+          <Textarea
+            placeholder="Type your reply..."
+            value={reply}
+            onChange={(e) => setReply(e.target.value)}
+            className="flex-1"
+          />
+          <Button onClick={handleSendReply} disabled={loading || !reply.trim()} className="uc-gradient-btn text-primary-foreground self-end">
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TicketDetail;

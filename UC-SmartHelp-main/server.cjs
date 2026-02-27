@@ -1,0 +1,39 @@
+import express from 'express';
+import mysql from 'mysql2';
+import cors from 'cors';
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// 1. Database Connection (Layer 3)
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '', // Default XAMPP password is empty
+  database: 'uc_smarthelp' 
+});
+
+db.connect(err => {
+  if (err) {
+    console.error('❌ Database connection failed:', err.message);
+  } else {
+    console.log('✅ Connected to MySQL Database');
+  }
+});
+
+// 2. Google Auth Endpoint (Layer 2)
+app.post('/api/google-auth', (req, res) => {
+  const { email, firstName, lastName } = req.body;
+  
+  // Logic to insert or update the user in MySQL
+  const query = "INSERT INTO users (email, first_name, last_name) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE first_name = VALUES(first_name)";
+  
+  db.query(query, [email, firstName, lastName], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ email, firstName, lastName, id: result.insertId });
+  });
+});
+
+app.listen(3000, () => console.log('🚀 Server running on http://localhost:3000'));
