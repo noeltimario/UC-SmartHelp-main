@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/Navbar";
 import { Ticket, ClipboardList } from "lucide-react";
 import NewTicketDialog from "@/components/tickets/NewTicketDialog";
 import TicketList from "@/components/tickets/TicketList";
@@ -8,10 +10,35 @@ import FeedbackDialog from "@/components/tickets/FeedbackDialog";
 import { Button } from "@/components/ui/button";
 
 const StudentDashboard = () => {
-  // 1. Get user from local storage (Manual Auth)
-  const userJson = localStorage.getItem("user");
-  const user = userJson ? JSON.parse(userJson) : null;
-  const isGuest = localStorage.getItem("uc_guest") === "1";
+  const [user, setUser] = useState<any>(null);
+  const [isGuest, setIsGuest] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    const guestFlag = localStorage.getItem("uc_guest") === "1";
+
+    // Redirect to login when neither user nor guest flag present
+    if (!savedUser && !guestFlag) {
+      navigate("/login");
+      return;
+    }
+
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+      } catch (e) {
+        console.error("Failed to parse user session:", e);
+        localStorage.removeItem("user");
+        navigate("/login");
+      }
+    }
+
+    setIsGuest(guestFlag);
+    setLoading(false);
+  }, [navigate]);
 
   const [showNewTicket, setShowNewTicket] = useState(false);
   const [view, setView] = useState<"home" | "tickets">("home");
@@ -41,14 +68,29 @@ const StudentDashboard = () => {
     loadRecent();
   }, [user, isGuest]);
 
-  return (
-    <div className="container py-8 space-y-8">
-      {/* Welcome banner */}
-      <div className="rounded-xl uc-gradient px-8 py-6 bg-primary text-white text-center">
-        <h1 className="text-2xl font-bold italic md:text-3xl">
-          Welcome {user?.firstName || (isGuest ? "Guest" : "Student")}!
-        </h1>
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground font-medium animate-pulse">Loading your dashboard...</p>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="container mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="rounded-xl border bg-card p-2 shadow-sm">
+          <div className="container py-8 space-y-8">
+            {/* Welcome banner */}
+            <div className="rounded-xl uc-gradient px-8 py-6 bg-primary text-white text-center">
+              <h1 className="text-2xl font-bold italic md:text-3xl">
+                Welcome {user?.firstName || (isGuest ? "Guest" : "Student")}!
+              </h1>
+            </div>
 
       {view === "home" ? (
         <>
@@ -132,14 +174,17 @@ const StudentDashboard = () => {
 
       {/* Modals remain, but they may need internal revisions later */}
       <NewTicketDialog open={showNewTicket} onOpenChange={setShowNewTicket} />
-      <FeedbackDialog open={showFeedback} onClose={() => setShowFeedback(false)} />
-      {selectedTicket && (
-        <TicketDetailModal
-          ticket={selectedTicket}
-          onClose={() => { setSelectedTicket(null); setView('home'); }}
-          isStaff={false}
-        />
-      )}
+            <FeedbackDialog open={showFeedback} onClose={() => setShowFeedback(false)} />
+            {selectedTicket && (
+              <TicketDetailModal
+                ticket={selectedTicket}
+                onClose={() => { setSelectedTicket(null); setView('home'); }}
+                isStaff={false}
+              />
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
