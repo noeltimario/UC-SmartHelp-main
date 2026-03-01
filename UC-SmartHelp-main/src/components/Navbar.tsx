@@ -78,11 +78,11 @@ const Navbar = () => {
                 </div>
 
                 {/* Shared Menu Items */}
+                <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                  Dashboard
+                </DropdownMenuItem>
                 {!isGuest && (
                   <>
-                    <DropdownMenuItem onClick={() => navigate("/dashboard")}>
-                      Dashboard
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/settings")}>
                       Account Settings
                     </DropdownMenuItem>

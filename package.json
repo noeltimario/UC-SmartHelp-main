@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix ./UC-SmartHelp-main run dev",
+    "install:inner": "npm --prefix ./UC-SmartHelp-main install",
+    "start": "npm run dev"
+  }
+}
