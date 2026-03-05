@@ -77,14 +77,7 @@ const NewTicketDialog = ({ open, onOpenChange }: Props) => {
       return;
     }
 
-    let dbDeptName = departmentName;
-    if (dbDeptName.includes("Accounting")) dbDeptName = "Accounting";
-    else if (dbDeptName.includes("Cashiers")) dbDeptName = "Cashier";
-    else if (dbDeptName.includes("Clinic")) dbDeptName = "Clinic";
-    else if (dbDeptName.includes("CCS")) dbDeptName = "CCS";
-    else if (dbDeptName.includes("Registrar")) dbDeptName = "Registrar";
-    else if (dbDeptName.includes("SAO")) dbDeptName = "SAO";
-    else if (dbDeptName.includes("Scholarship")) dbDeptName = "Scholarship";
+    const dbDeptName = departmentName;
 
     setLoading(true);
     const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -145,7 +138,7 @@ const NewTicketDialog = ({ open, onOpenChange }: Props) => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Topic</Label>
+                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Topic/Subject</Label>
                   {departmentName ? (
                     <Select value={topic} onValueChange={setTopic}>
                       <SelectTrigger className="h-12 rounded-xl border-2 shadow-sm"><SelectValue placeholder="Select topic" /></SelectTrigger>

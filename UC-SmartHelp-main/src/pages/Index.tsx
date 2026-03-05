@@ -12,16 +12,11 @@ import logo from "@/assets/uc-smarthelp-logo.jpg";
 const Index = () => {
   const navigate = useNavigate();
 
-  // Redirect if already logged in - REMOVED to allow seeing home page
-  /*
+  // Automatically logout if on home page to ensure profile is not visible
   useEffect(() => {
-    const user = localStorage.getItem("user");
-    const isGuest = localStorage.getItem("uc_guest") === "1";
-    if (user || isGuest) {
-      navigate("/dashboard");
-    }
-  }, [navigate]);
-  */
+    localStorage.removeItem("user");
+    localStorage.removeItem("uc_guest");
+  }, []);
 
   const features = [
     { 

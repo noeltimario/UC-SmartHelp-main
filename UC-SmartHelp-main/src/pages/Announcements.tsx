@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
-
 const Announcements = () => {
   const [announcements, setAnnouncements] = useState<any[]>([]);
 
@@ -18,6 +17,7 @@ const Announcements = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      
       <div className="container py-12 space-y-6">
         <h1 className="text-3xl font-bold text-foreground">Announcements</h1>
         {announcements.length === 0 ? (

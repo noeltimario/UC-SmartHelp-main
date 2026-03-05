@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, X } from "lucide-react";
+import { Eye, EyeOff, X, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
 const Register = () => {
@@ -20,8 +20,30 @@ const Register = () => {
   // API URL from environment
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+  // Password Validation Logic
+  const validatePassword = (pass: string) => {
+    const hasMinLength = pass.length >= 8;
+    const hasCapitalLetter = /[A-Z]/.test(pass);
+    const hasNumber = /[0-9]/.test(pass);
+    return { hasMinLength, hasCapitalLetter, hasNumber };
+  };
+
+  const passwordCriteria = validatePassword(password);
+  const isPasswordValid = passwordCriteria.hasMinLength && passwordCriteria.hasCapitalLetter && passwordCriteria.hasNumber;
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password before submission
+    if (!isPasswordValid) {
+      toast({ 
+        variant: "destructive", 
+        title: "Invalid Password", 
+        description: "Password must meet all requirements." 
+      });
+      return;
+    }
+
     setLoading(true);
 
     const userData = {
@@ -48,7 +70,7 @@ const Register = () => {
 
       toast({ 
         title: "Success!", 
-        description: "Account created successfully. You can now login." 
+        description: "Account created successfully. Please login to continue." 
       });
       navigate("/login");
     } catch (error: any) {
@@ -65,7 +87,7 @@ const Register = () => {
   const handleClose = () => {
     const isGuest = localStorage.getItem("uc_guest") === "1";
     if (isGuest) {
-      navigate("/dashboard");
+      navigate("/studentdashboard");
     } else {
       navigate("/");
     }
@@ -100,12 +122,12 @@ const Register = () => {
               <Label className="text-white text-sm ml-1">Email:</Label>
               <Input type="email" placeholder="example@uc.edu.ph" value={email} onChange={(e) => setEmail(e.target.value)} required className="bg-white/95 border-0 h-11" />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label className="text-white text-sm ml-1">Password:</Label>
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="Min. 8 characters"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -115,9 +137,46 @@ const Register = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              
+              {/* Password Requirements Tip - Always Visible */}
+              <div className="bg-blue-600/30 border border-blue-400/50 rounded-lg p-3 space-y-2">
+                <p className="text-white text-xs font-bold uppercase tracking-wide">Requirements:</p>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    {passwordCriteria.hasMinLength ? (
+                      <Check className="h-4 w-4 text-green-400 flex-shrink-0" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border border-gray-400 flex-shrink-0" />
+                    )}
+                    <span className={`text-xs ${passwordCriteria.hasMinLength ? "text-green-300 font-semibold" : "text-gray-300"}`}>
+                      At least 8 characters
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {passwordCriteria.hasCapitalLetter ? (
+                      <Check className="h-4 w-4 text-green-400 flex-shrink-0" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border border-gray-400 flex-shrink-0" />
+                    )}
+                    <span className={`text-xs ${passwordCriteria.hasCapitalLetter ? "text-green-300 font-semibold" : "text-gray-300"}`}>
+                      At least 1 Capital Letter
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {passwordCriteria.hasNumber ? (
+                      <Check className="h-4 w-4 text-green-400 flex-shrink-0" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border border-gray-400 flex-shrink-0" />
+                    )}
+                    <span className={`text-xs ${passwordCriteria.hasNumber ? "text-green-300 font-semibold" : "text-gray-300"}`}>
+                      At least 1 Number
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xl py-7 mt-2 rounded-xl shadow-lg transition-all active:scale-95">
+            <Button type="submit" disabled={loading || !isPasswordValid || !firstName || !lastName || !email} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xl py-7 mt-2 rounded-xl shadow-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? "SYNCING..." : "SIGN UP"}
             </Button>
           </form>

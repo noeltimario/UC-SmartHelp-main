@@ -1,11 +1,12 @@
 import Navbar from "@/components/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Phone, MapPin } from "lucide-react";
-
-const Contact = () => (
-  <div className="min-h-screen bg-background">
-    <Navbar />
-    <div className="container max-w-3xl py-16 space-y-8">
+const Contact = () => {
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      
+      <div className="container max-w-3xl py-16 space-y-8">
       <h1 className="text-3xl font-bold text-foreground text-center">Contact Us</h1>
       <div className="grid gap-6 sm:grid-cols-3">
         <Card className="text-center">
@@ -30,8 +31,9 @@ const Contact = () => (
           </CardContent>
         </Card>
       </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default Contact;

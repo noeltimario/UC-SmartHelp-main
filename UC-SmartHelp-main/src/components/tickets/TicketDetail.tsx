@@ -24,6 +24,7 @@ const TicketDetail = ({ ticket, onBack }: Props) => {
   const [reply, setReply] = useState("");
   const [status, setStatus] = useState(ticket.status);
   const [loading, setLoading] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState(ticket.acknowledge_at || ticket.closed_at || ticket.reopen_at || ticket.created_at);
   const isStaffOrAdmin = roles.includes("staff") || roles.includes("admin");
 
   const fetchMessages = async () => {
@@ -64,24 +65,46 @@ const TicketDetail = ({ ticket, onBack }: Props) => {
 
       <div className="rounded-xl border bg-card p-6 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
+          <div className="flex-1">
             <h2 className="text-xl font-bold text-foreground">{ticket.subject}</h2>
             <p className="text-sm text-muted-foreground">
-              Ticket {ticket.ticket_number} • {ticket.departments?.name} • {format(new Date(ticket.created_at), "MMM d, yyyy")}
+              Ticket {ticket.ticket_number} • {ticket.departments?.name}
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Created at: {format(new Date(ticket.created_at), "MMM d, yyyy h:mm a")}
             </p>
           </div>
-          {isStaffOrAdmin ? (
-            <Select value={status} onValueChange={handleStatusChange}>
+          <div className="flex flex-col gap-3 min-w-max">
+            {isStaffOrAdmin ? (
+              <Select value={status} onValueChange={handleStatusChange}>
+                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_progress">In-Progress</SelectItem>
+                  <SelectItem value="resolved">Resolved/Closed</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Badge>{status === "in_progress" ? "In-Progress" : status === "resolved" ? "Resolved/Closed" : "Pending"}</Badge>
+            )}
+            <Select value={updatedAt ? "updated" : "none"} disabled={true}>
               <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_progress">In-Progress</SelectItem>
-                <SelectItem value="resolved">Resolved/Closed</SelectItem>
+                {ticket.acknowledge_at && (
+                  <SelectItem value="acknowledge">Acknowledged at: {format(new Date(ticket.acknowledge_at), "MMM d, yyyy h:mm a")}</SelectItem>
+                )}
+                {ticket.closed_at && (
+                  <SelectItem value="closed">Closed at: {format(new Date(ticket.closed_at), "MMM d, yyyy h:mm a")}</SelectItem>
+                )}
+                {ticket.reopen_at && (
+                  <SelectItem value="reopen">Reopened at: {format(new Date(ticket.reopen_at), "MMM d, yyyy h:mm a")}</SelectItem>
+                )}
+                {!ticket.acknowledge_at && !ticket.closed_at && !ticket.reopen_at && (
+                  <SelectItem value="none">No updates yet</SelectItem>
+                )}
               </SelectContent>
             </Select>
-          ) : (
-            <Badge>{status === "in_progress" ? "In-Progress" : status === "resolved" ? "Resolved/Closed" : "Pending"}</Badge>
-          )}
+          </div>
         </div>
 
         {/* Original message */}

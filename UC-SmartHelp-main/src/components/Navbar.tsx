@@ -47,17 +47,19 @@ const Navbar = () => {
   const isLoggedIn = (user && (user.userId || user.id || user.user_id)) || isGuest;
 
   const handleDashboardClick = () => {
-    if (location.pathname === "/dashboard") {
+    if (location.pathname === "/studentdashboard") {
       // If already on dashboard, force a reload or re-navigate to reset inner state
-      navigate("/dashboard", { replace: true });
-      window.location.href = "/dashboard"; 
+      navigate("/studentdashboard", { replace: true });
+      window.location.href = "/studentdashboard"; 
     } else {
-      navigate("/dashboard");
+      navigate("/studentdashboard");
     }
   };
 
-  // Format full name: Use server provided fullName
-  const fullName = user?.fullName || "User";
+  // Format full name: Use server provided firstName and lastName
+  const fullName = user?.firstName && user?.lastName 
+    ? `${user.firstName} ${user.lastName}` 
+    : (user?.fullName || "User");
   const initial = (user?.firstName?.[0] || user?.fullName?.[0] || "U").toUpperCase();
 
   return (

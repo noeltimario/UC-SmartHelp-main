@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { X } from "lucide-react";
+import { format } from "date-fns";
 
 interface Ticket {
   id: string;
@@ -12,7 +13,11 @@ interface Ticket {
   status: string;
   created_at: string;
   department_id: string;
+  department?: string;
   description?: string;
+  acknowledge_at?: string | null;
+  closed_at?: string | null;
+  reopen_at?: string | null;
   departments?: { name: string } | null;
   profiles?: {
     first_name: string;
@@ -89,7 +94,7 @@ const TicketDetailModal = ({ ticket, onClose, isStaff = false }: Props) => {
     ? `${ticket.profiles.first_name || ""} ${ticket.profiles.last_name || ""}`.trim() 
     : "Student";
     
-  const deptName = ticket.departments?.name || "Department";
+  const deptName = ticket.department || ticket.departments?.name || "Department";
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md px-4 py-6" onClick={onClose}>
@@ -111,13 +116,35 @@ const TicketDetailModal = ({ ticket, onClose, isStaff = false }: Props) => {
         <div className="p-8 space-y-8">
           {/* Metadata Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-              <span className="text-[10px] font-black text-primary uppercase tracking-widest block mb-1">From Student</span>
-              <span className="text-lg font-bold text-foreground">{isStaff ? senderName : "You"}</span>
-            </div>
             <div className="p-4 bg-secondary/50 rounded-2xl border">
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-1">Assigned Department</span>
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-1">Office / Department</span>
               <span className="text-lg font-bold text-foreground">{deptName}</span>
+            </div>
+            <div className="p-4 bg-blue/5 rounded-2xl border">
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-1">Created At</span>
+              <span className="text-sm font-bold text-foreground">{format(new Date(ticket.created_at), "MMM d, yyyy h:mm a")}</span>
+            </div>
+            <div className="p-4 bg-blue/5 rounded-2xl border">
+              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-1">Latest Update</span>
+              <Select disabled>
+                <SelectTrigger className="w-full text-sm">
+                  <SelectValue placeholder="No updates yet" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ticket.acknowledge_at && (
+                    <SelectItem value="acknowledge">Acknowledged: {format(new Date(ticket.acknowledge_at), "MMM d, yyyy h:mm a")}</SelectItem>
+                  )}
+                  {ticket.closed_at && (
+                    <SelectItem value="closed">Closed: {format(new Date(ticket.closed_at), "MMM d, yyyy h:mm a")}</SelectItem>
+                  )}
+                  {ticket.reopen_at && (
+                    <SelectItem value="reopen">Reopened: {format(new Date(ticket.reopen_at), "MMM d, yyyy h:mm a")}</SelectItem>
+                  )}
+                  {!ticket.acknowledge_at && !ticket.closed_at && !ticket.reopen_at && (
+                    <SelectItem value="none">No updates yet</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -129,34 +156,42 @@ const TicketDetailModal = ({ ticket, onClose, isStaff = false }: Props) => {
                 {ticket.subject}
               </div>
             </div>
-            
-            <div className="space-y-1">
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Message Description</span>
-              <div className="bg-muted/10 p-6 rounded-2xl border border-dashed text-foreground leading-relaxed">
-                 <p className="whitespace-pre-wrap">{ticket.description || "No description provided."}</p>
-              </div>
-            </div>
           </div>
 
           {/* Thread History */}
-          {messages.length > 0 && (
+          <div className="space-y-4">
+            <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Conversation Thread</h4>
             <div className="space-y-4">
-              <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Conversation</h4>
-              <div className="space-y-4">
-                {messages.map((m) => (
-                  <div key={m.id} className="bg-card border rounded-2xl p-5 shadow-sm">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-xs font-bold text-primary">
-                        {m.profiles?.first_name} {m.profiles?.last_name}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground font-bold">RECENT</span>
-                    </div>
-                    <p className="text-sm text-foreground leading-relaxed">{m.content}</p>
-                  </div>
-                ))}
+              {/* Initial Message from Student */}
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-xs font-black text-primary uppercase tracking-wider">
+                    {isStaff ? senderName : "You"} (Student)
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-bold">
+                    {format(new Date(ticket.created_at), "MMM d, h:mm a")}
+                  </span>
+                </div>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{ticket.description || "No description provided."}</p>
               </div>
+
+              {/* Subsequent Messages */}
+              {messages.map((m) => (
+                <div key={m.id} className="bg-card border rounded-2xl p-5 shadow-sm">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-xs font-bold text-primary">
+                      {m.profiles?.first_name} {m.profiles?.last_name}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-bold">
+                      {m.created_at ? format(new Date(m.created_at), "MMM d, h:mm a") : "RECENT"}
+                    </span>
+                  </div>
+                  <p className="text-sm text-foreground leading-relaxed">{m.content}</p>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Dynamic Forms */}
           {showReplyBox && (
@@ -177,36 +212,11 @@ const TicketDetailModal = ({ ticket, onClose, isStaff = false }: Props) => {
             </div>
           )}
 
-          {showForward && (
-            <div className="p-6 border-2 border-amber-500/20 rounded-3xl bg-amber-500/5 space-y-4 animate-in slide-in-from-top-4">
-              <h4 className="text-sm font-black uppercase text-amber-600 ml-1">Forward Ticket</h4>
-              <Select value={forwardDept} onValueChange={setForwardDept}>
-                <SelectTrigger className="bg-background rounded-xl h-12">
-                  <SelectValue placeholder="Select target department..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex gap-3">
-                <Button onClick={handleForward} disabled={!forwardDept} className="flex-1 py-6 bg-amber-600 hover:bg-amber-700 rounded-xl font-bold">
-                  CONFIRM FORWARD
-                </Button>
-                <Button variant="outline" onClick={() => setShowForward(false)} className="rounded-xl px-8">Cancel</Button>
-              </div>
-            </div>
-          )}
-
           {/* Action Buttons */}
-          {!showReplyBox && !showForward && (
-            <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t">
-              <Button onClick={() => setShowReplyBox(true)} className="flex-1 py-8 text-xl font-black rounded-2xl shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
-                REPLY
-              </Button>
-              <Button variant="outline" onClick={() => setShowForward(true)} className="flex-1 py-8 text-xl font-black rounded-2xl border-2 hover:bg-secondary/50 transition-all">
-                FORWARD
+          {!showReplyBox && (
+            <div className="pt-6 border-t">
+              <Button onClick={() => setShowReplyBox(true)} className="w-full py-8 text-xl font-black rounded-2xl shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all uc-gradient-btn text-white">
+                REPLY TO TICKET
               </Button>
             </div>
           )}

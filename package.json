@@ -5,5 +5,8 @@
     "server": "npm --prefix ./UC-SmartHelp-main run server",
     "install:inner": "npm --prefix ./UC-SmartHelp-main install",
     "start": "npm run dev"
+  },
+  "devDependencies": {
+    "vite": "^7.3.1"
   }
 }

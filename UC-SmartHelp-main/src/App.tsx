@@ -10,15 +10,14 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Announcements from "./pages/Announcements";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import TicketsPage from "./pages/TicketsPage";
 import NotFound from "./pages/NotFound";
 
 // Component Imports
-import Navbar from "@/components/Navbar";
 import StudentDashboard from "@/components/dashboard/StudentDashboard";
 import StaffDashboard from "@/components/dashboard/StaffDashboard";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
@@ -40,18 +39,13 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           
-          {/* Centralized Dashboard Route (Handles Role-based Redirection and Layout) */}
-          <Route path="/dashboard" element={<Dashboard />} />
-
-          {/* Individual Dashboard Routes (Optional, can be used for direct linking) */}
-          {/* Note: These individual routes now rely on the sub-components which don't have Navbars internally, 
-              so we add one here for these specific routes. */}
-          <Route path="/StudentDashboard" element={<><Navbar /><div className="container mx-auto p-4 md:p-8"><StudentDashboard /></div></>} />
-          <Route path="/StaffDashboard" element={<><Navbar /><div className="container mx-auto p-4 md:p-8"><StaffDashboard /></div></>} />
-          <Route path="/AdminDashboard" element={<><Navbar /><div className="container mx-auto p-4 md:p-8"><AdminDashboard /></div></>} />
-          <Route path="/GuestDashboard" element={<><Navbar /><div className="container mx-auto p-4 md:p-8"><GuestDashboard /></div></>} />
+          {/* Student Dashboard Route */}
+          <Route path="/studentdashboard" element={<StudentDashboard />} />
           
-          {/* Support Pages (These pages HAVE Navbar inside them already) */}
+          {/* Tickets Page */}
+          <Route path="/tickets" element={<TicketsPage />} />
+          
+          {/* Support Pages */}
           <Route path="/settings" element={<Settings />} />
           <Route path="/announcements" element={<Announcements />} />
           <Route path="/about" element={<About />} />

@@ -34,9 +34,11 @@ npm i
 
 # Step 4: Start the development server with auto-reloading and an instant preview.
 for front end
+npm install vite --save-dev
 npm run dev
-```
+
 for back end
+npm install vite --save-dev
 npm run server
 or
 
@@ -83,3 +85,8 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/c
 
 HOW TO RUN THE CHATBOT
 -npx flowise start
+
+#IF CHANGED PORT
+-npx flowise start --PORT=3001 
+
+```

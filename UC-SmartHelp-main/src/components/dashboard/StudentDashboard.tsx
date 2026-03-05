@@ -1,10 +1,22 @@
 import { useState, useEffect } from "react";
 import { Ticket as TicketIcon, ClipboardList } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import NewTicketDialog from "@/components/tickets/NewTicketDialog";
 import TicketDetailModal from "@/components/tickets/TicketDetailModal";
 import Chatbot from "@/components/chatbot/Chatbot";
 import FeedbackDialog from "@/components/tickets/FeedbackDialog";
 import { Button } from "@/components/ui/button";
+import Navbar from "@/components/Navbar";
+import { useBackConfirm } from "@/hooks/use-back-confirm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface User {
   userId: number;
@@ -31,8 +43,11 @@ interface Ticket {
 }
 
 const StudentDashboard = () => {
-  // Safe localStorage access
+  // Safe localStorage access and auth check
   let parsedUser: User | null = null;
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+
   try {
     const savedUser = localStorage.getItem("user");
     parsedUser = savedUser ? (JSON.parse(savedUser) as User) : null;
@@ -41,6 +56,17 @@ const StudentDashboard = () => {
   }
   
   const isGuest = localStorage.getItem("uc_guest") === "1";
+  const { showConfirm, handleConfirmLeave, handleStayOnPage } = useBackConfirm();
+
+  // Auth Check
+  useEffect(() => {
+    if (!parsedUser && !isGuest) {
+      console.log("No user found, redirecting to login");
+      navigate("/login");
+      return;
+    }
+    setLoading(false);
+  }, [navigate, parsedUser, isGuest]);
 
   const [showNewTicket, setShowNewTicket] = useState(false);
   const [view, setView] = useState<"home" | "tickets">("home");
@@ -65,17 +91,42 @@ const StudentDashboard = () => {
     loadRecent();
   }, [parsedUser, isGuest]);
 
+  // Dashboard Content
+
   return (
-    <div className="space-y-8 p-4">
-      {/* Welcome banner */}
-      <div className="rounded-xl uc-gradient px-8 py-6 bg-primary text-white text-center shadow-md">
-        <h1 className="text-2xl font-bold italic md:text-3xl">
-          Welcome {parsedUser?.firstName || (isGuest ? "Guest" : "Student")}!
-        </h1>
-      </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      <Navbar />
+      
+      <AlertDialog open={showConfirm} onOpenChange={handleStayOnPage}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave this page?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Do you want to leave this page? You will be logged out and returned to the home page.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel onClick={handleStayOnPage}>
+              No, stay here
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmLeave} className="bg-destructive hover:bg-destructive/90">
+              Yes, leave and logout
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <main className="flex-1 container mx-auto p-4 md:p-8 animate-in fade-in duration-500">
+        <div className="rounded-2xl border bg-card shadow-xl overflow-hidden min-h-[500px] p-4">
+          {/* Welcome banner */}
+          <div className="rounded-xl uc-gradient px-8 py-6 bg-primary text-white text-center shadow-md">
+            <h1 className="text-2xl font-bold italic md:text-3xl">
+              Welcome {parsedUser?.firstName || (isGuest ? "Guest" : "Student")}!
+            </h1>
+          </div>
 
       {view === "home" ? (
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-2xl mx-auto space-y-6 mt-8">
           <div className="grid gap-6 sm:grid-cols-2">
             <button
               onClick={() => { if (!isGuest) setShowNewTicket(true); }}
@@ -95,7 +146,7 @@ const StudentDashboard = () => {
             </button>
 
             <button
-              onClick={() => { if (!isGuest) setView("tickets"); }}
+              onClick={() => { if (!isGuest) navigate("/tickets"); }}
               className={
                 "flex flex-col items-center gap-3 rounded-xl border bg-card p-8 shadow-sm transition-all " +
                 (isGuest ? "opacity-50 cursor-not-allowed" : "hover:shadow-lg hover:-translate-y-1")
@@ -169,6 +220,8 @@ const StudentDashboard = () => {
           isStaff={false}
         />
       )}
+        </div>
+      </main>
     </div>
   );
 };

@@ -13,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
 const Settings = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -77,18 +76,43 @@ const Settings = () => {
   };
 
   const handleSaveProfile = async () => {
+    if (!firstName || !lastName) {
+      toast({ title: "Validation Error", description: "First and last names are required.", variant: "destructive" });
+      return;
+    }
+
     setSaving(true);
-    const updatedUser = { 
-      ...user, 
-      firstName, 
-      lastName, 
-      fullName: `${firstName} ${lastName}`.trim(),
-      profileImage 
-    };
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    setUser(updatedUser);
-    setSaving(false);
-    toast({ title: "Profile saved successfully!" });
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+    try {
+      const response = await fetch(`${API_URL}/api/update-profile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.userId || user.id,
+          firstName,
+          lastName
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Failed to update profile");
+
+      // Update local storage with the new data from server
+      const updatedUser = { 
+        ...user, 
+        ...data,
+        profileImage // Keep the local profile image for now as it's not in DB
+      };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      
+      toast({ title: "Profile saved successfully!", description: "Your changes have been updated in our database." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Update Failed", description: error.message });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -127,6 +151,7 @@ const Settings = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      
       <div className="container max-w-2xl py-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="space-y-2 text-center sm:text-left">
           <h1 className="text-3xl font-black text-foreground uppercase italic tracking-tight">Account Settings</h1>

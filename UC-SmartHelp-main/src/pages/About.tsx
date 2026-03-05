@@ -1,10 +1,11 @@
 import Navbar from "@/components/Navbar";
 import logo from "@/assets/uc-smarthelp-logo.jpg";
-
-const About = () => (
-  <div className="min-h-screen bg-background">
-    <Navbar />
-    <div className="container max-w-3xl py-16 space-y-8">
+const About = () => {
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      
+      <div className="container max-w-3xl py-16 space-y-8">
       <div className="text-center">
         <img src={logo} alt="UC SmartHelp" className="mx-auto h-24 mb-6" />
         <h1 className="text-3xl font-bold text-foreground">About UC SmartHelp</h1>
@@ -23,8 +24,9 @@ const About = () => (
           have access to analytics, account management, and review insights across all departments.
         </p>
       </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default About;

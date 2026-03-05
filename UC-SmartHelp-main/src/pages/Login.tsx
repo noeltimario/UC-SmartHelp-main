@@ -57,10 +57,24 @@ const Login = () => {
       localStorage.setItem("user", JSON.stringify(data));
       
       toast({ title: "Welcome!", description: `Signed in as ${data.firstName || 'User'}` });
-      navigate("/dashboard");
+      navigate("/studentdashboard");
 
     } catch (error: any) {
       console.error("Auth Error:", error);
+      
+      // Check if popup was closed by user
+      const isPopupClosed = error.code === "auth/popup-closed-by-user" || 
+                           error.message?.includes("popup_closed_by_user") ||
+                           error.message?.includes("closed") ||
+                           error.message?.includes("popup") ||
+                           error.message?.includes("Popup");
+      
+      if (isPopupClosed) {
+        // Reset loading state immediately - no error message
+        setLoading(false);
+        return;
+      }
+      
       // specific handling for the "Closed Connection" error shown in your screenshots
       const isClosedState = error.message.includes("closed state");
       
@@ -108,7 +122,7 @@ const Login = () => {
           userId: data.userId || data.id || data.user_id
         };
         localStorage.setItem("user", JSON.stringify(userData));
-        navigate("/dashboard");
+        navigate("/studentdashboard");
       } else {
         throw new Error(data.error || "Invalid credentials");
       }
@@ -127,13 +141,13 @@ const Login = () => {
     localStorage.removeItem("user");
     localStorage.setItem('uc_guest', '1');
     toast({ title: "Guest Mode Enabled" });
-    navigate("/dashboard");
+    navigate("/studentdashboard");
   };
 
   const handleClose = () => {
     const isGuest = localStorage.getItem("uc_guest") === "1";
     if (isGuest) {
-      navigate("/dashboard");
+      navigate("/studentdashboard");
     } else {
       navigate("/");
     }

@@ -22,7 +22,7 @@ const ResetPassword = () => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Password updated!" });
-      navigate("/dashboard");
+      navigate("/studentdashboard");
     }
   };
 
