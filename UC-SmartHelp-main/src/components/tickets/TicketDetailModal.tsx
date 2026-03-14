@@ -259,17 +259,16 @@ const TicketDetailModal = ({ ticket, onClose, isStaff = false }: Props) => {
           )}
 
           {/* Action Buttons */}
-          {isStaff && !showReplyBox && (
+          {!showReplyBox && (
             <div className="pt-6 border-t">
               <Button onClick={() => setShowReplyBox(true)} className="w-full py-8 text-xl font-black rounded-2xl shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all uc-gradient-btn text-white">
                 REPLY TO TICKET
               </Button>
-            </div>
-          )}
-          
-          {!isStaff && !showReplyBox && (
-            <div className="pt-6 border-t text-center">
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest italic">Viewing ticket as requester</p>
+              {!isStaff && (
+                <div className="mt-4 text-center">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">Viewing ticket as requester</p>
+                </div>
+              )}
             </div>
           )}
         </div>

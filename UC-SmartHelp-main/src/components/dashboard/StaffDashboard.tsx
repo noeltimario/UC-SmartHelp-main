@@ -58,6 +58,11 @@ const StaffDashboard = () => {
       const url = new URL(`${API_URL}/api/tickets`);
       if (userId) url.searchParams.append("user_id", userId.toString());
       url.searchParams.append("role", user?.role || "staff");
+      
+      // Pass department to enable server-side filtering for staff
+      if (user?.department) {
+        url.searchParams.append("department", user.department);
+      }
 
       const response = await fetch(url.toString());
       if (response.ok) {

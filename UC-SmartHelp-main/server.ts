@@ -255,24 +255,26 @@ app.post('/api/tickets', async (req: Request, res: Response) => {
 });
 
 app.get('/api/tickets', async (req: Request, res: Response) => {
-  const { user_id, role: clientRole } = req.query;
+  const { user_id, department } = req.query;
   
   try {
-    // 1. Determine the actual role of the user from the database
+    // 1. Identify the user and their actual role
     let actualRole = 'student';
+    let detectedUserPk = 'id';
+    
+    const [userCols]: any = await db.query("SHOW COLUMNS FROM users");
+    detectedUserPk = userCols.find((c: any) => c.Field.toLowerCase() === 'id' || c.Field.toLowerCase() === 'user_id')?.Field || 'id';
+
     if (user_id) {
-      const [userCols]: any = await db.query("SHOW COLUMNS FROM users");
-      const userPk = userCols.find((c: any) => c.Field.toLowerCase() === 'id' || c.Field.toLowerCase() === 'user_id')?.Field || 'id';
-      const [userRows]: any = await db.query(`SELECT role FROM users WHERE ${userPk} = ?`, [user_id]);
+      const [userRows]: any = await db.query(`SELECT role FROM users WHERE ${detectedUserPk} = ?`, [user_id]);
       if (userRows.length > 0) {
         actualRole = userRows[0].role.toLowerCase();
       }
     }
 
     const isStaffOrAdmin = actualRole === 'admin' || actualRole === 'staff';
-    console.log(`[Tickets] Fetching for user_id: ${user_id}, actual_role: ${actualRole}, isStaffOrAdmin: ${isStaffOrAdmin}`);
 
-    // 2. Build the query
+    // 2. Determine ticket primary key
     const [ticketCols]: any = await db.query("SHOW COLUMNS FROM tickets");
     const ticketColNames = ticketCols.map((c: any) => c.Field);
     const ticketPk = ticketColNames.includes('id') ? 'id' : (ticketColNames.includes('ticket_id') ? 'ticket_id' : 'id');
@@ -283,35 +285,46 @@ app.get('/api/tickets', async (req: Request, res: Response) => {
       selectClause += `, t.${ticketPk} as ticket_number`;
     }
 
+    // 3. Build query with strict server-side filtering
     let query = `
       SELECT ${selectClause}, u.first_name, u.last_name, CONCAT(u.first_name, ' ', u.last_name) AS full_name 
       FROM tickets t
-      LEFT JOIN users u ON t.user_id = u.${userPkRealName}
+      LEFT JOIN users u ON t.user_id = u.${detectedUserPk}
     `;
-    const params: any[] = [];
     
-    // 3. Apply filtering based on ACTUAL role
-    if (!isStaffOrAdmin) {
-      if (user_id) {
-        query += ' WHERE t.user_id = ?';
-        params.push(user_id);
-      } else {
-        return res.json([]); // No user_id provided for student
-      }
+    const params: any[] = [];
+    let whereAdded = false;
+
+    if (isStaffOrAdmin && department) {
+      // Staff/Admin requesting specific department tickets (Dashboard mode)
+      query += ` WHERE (t.department = ? OR t.department LIKE ?)`;
+      params.push(department, `%${department}%`);
+      whereAdded = true;
+    } else if (user_id) {
+      // Default mode: Everyone (including students) sees ONLY their own tickets
+      query += ` WHERE t.user_id = ?`;
+      params.push(user_id);
+      whereAdded = true;
+    }
+
+    if (!whereAdded) {
+      // Safety fallback: if no user_id or authorized dept, return nothing
+      return res.json([]);
     }
 
     query += ' ORDER BY t.created_at DESC';
     
     const [rows]: any = await db.query(query, params);
-    // Normalize status to lowercase and replace spaces with underscores for frontend consistency
+    
     const normalizedRows = rows.map((r: any) => ({
       ...r,
       status: r.status?.toString().toLowerCase().trim().replace(/\s+/g, '_') || 'pending'
     }));
+    
     res.json(normalizedRows);
   } catch (error: any) {
     console.error("Database Error in GET /api/tickets:", error);
-    res.status(500).json({ error: "Error fetching tickets", details: error.message });
+    res.status(500).json({ error: "Error fetching tickets" });
   }
 });
 

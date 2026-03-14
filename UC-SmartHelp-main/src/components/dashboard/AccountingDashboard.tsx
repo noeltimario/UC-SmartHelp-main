@@ -64,6 +64,10 @@ const AccountingDashboard = () => {
       const url = new URL(`${API_URL}/api/tickets`);
       if (userId) url.searchParams.append("user_id", userId.toString());
       url.searchParams.append("role", user?.role || "staff");
+      
+      // Pass department to enable server-side filtering for staff
+      const userDept = user?.department || "accounting";
+      url.searchParams.append("department", userDept);
 
       const response = await fetch(url.toString());
       if (response.ok) {
@@ -293,7 +297,7 @@ const AccountingDashboard = () => {
             </div>
             <div className="rounded-3xl p-8 text-center shadow-xl border-b-8 border-emerald-400 bg-white">
               <p className="text-6xl font-black text-emerald-500 mb-2">{stats.resolved}</p>
-              <p className="text-xs font-black text-emerald-800 uppercase tracking-widest">Resolved</p>
+              <p className="text-xs font-black text-emerald-800 uppercase tracking-widest">Resolved/Closed</p>
             </div>
           </div>
 
@@ -368,7 +372,7 @@ const AccountingDashboard = () => {
                           {t.status?.toLowerCase() === "pending" ? (
                             <div 
                               className="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200 text-[10px] font-black uppercase tracking-widest shadow-sm select-none cursor-pointer hover:bg-amber-200 transition-colors"
-                              onClick={() => handleTicketClick(t)}
+                              onClick={() => handleStatusChange(t.id, "in_progress")}
                             >
                               Pending
                             </div>
@@ -385,13 +389,13 @@ const AccountingDashboard = () => {
                                 }`}
                               >
                                 <span className="flex items-center gap-1">
-                                  {t.status === 'in_progress' ? 'In-Progress' : 'Resolved'}
+                                  {t.status === 'in_progress' ? 'In-Progress' : 'Resolved/Closed'}
                                   <ChevronDown className="h-3 w-3 opacity-50" />
                                 </span>
                               </SelectTrigger>
                               <SelectContent className="rounded-xl border-2 min-w-[120px]">
                                 <SelectItem value="in_progress" className="font-bold text-blue-600 text-xs">In-Progress</SelectItem>
-                                <SelectItem value="resolved" className="font-bold text-emerald-600 text-xs">Resolved</SelectItem>
+                                <SelectItem value="resolved" className="font-bold text-emerald-600 text-xs">Resolved/Closed</SelectItem>
                               </SelectContent>
                             </Select>
                           )}
