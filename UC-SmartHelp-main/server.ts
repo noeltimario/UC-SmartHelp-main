@@ -25,9 +25,9 @@ const db = mysql.createPool({
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'uc_smarthelp',
-  port: parseInt(process.env.DB_PORT || "27244"), // Idugang kini
+  port: parseInt(process.env.DB_PORT || "27244"), 
   ssl: {
-    rejectUnauthorized: false // KINI ANG PINAKA-IMPORTANTE PARA SA AIVEN
+    rejectUnauthorized: false 
   }
 });
 
