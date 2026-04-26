@@ -25,6 +25,10 @@ const db = mysql.createPool({
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'uc_smarthelp',
+  port: parseInt(process.env.DB_PORT || "27244"), // Idugang kini
+  ssl: {
+    rejectUnauthorized: false // KINI ANG PINAKA-IMPORTANTE PARA SA AIVEN
+  }
 });
 
 const OVERDUE_TICKET_DEMO_MINUTES = 1; // demo threshold only
