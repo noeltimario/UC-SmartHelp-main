@@ -2,7 +2,10 @@
   "ExpandedNodes": [
     "",
     "\\UC-SmartHelp-main",
-    "\\UC-SmartHelp-main\\public"
+    "\\UC-SmartHelp-main\\public",
+    "\\UC-SmartHelp-main\\src",
+    "\\UC-SmartHelp-main\\src\\pages"
   ],
+  "SelectedNode": "\\UC-SmartHelp-main\\src\\pages\\Login.tsx",
   "PreviewInSolutionExplorer": false
 }
